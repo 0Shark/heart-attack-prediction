@@ -9,10 +9,14 @@ ization.
 1
 
 '''
-
+# dataset 1: https://www.kaggle.com/datasets/jeremylarcher/american-house-prices-and-demographics-of-top-cities/code
+# dataset 2: https://www.kaggle.com/datasets/adampq/air-quality-index-by-state-1980-2022
 
 from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QTabWidget
 from PyQt6.QtCore import Qt
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
 class Widget(QWidget):
     def __init__(self):
