@@ -13,7 +13,7 @@ ization.
 # might help us: https://www.kaggle.com/code/nareshbhat/heart-attack-prediction-using-different-ml-models/notebook
 
 
-from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QTabWidget, QLabel, QGridLayout, QSlider, QHBoxLayout, QSpinBox, QDial, QProgressBar, QMessageBox, QDialog
+from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QTabWidget, QLabel, QGridLayout, QSlider, QHBoxLayout, QSpinBox, QDial, QProgressBar, QDialog, QFileDialog, QLineEdit, QTextEdit
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt, QTimer
 import pandas as pd
@@ -113,7 +113,7 @@ class Widget(QWidget):
         self.cholestoral_dial.valueChanged.connect(self.value_changed)
         self.cholestoral_dial_label = QLabel("Cholestoral: " + str(self.cholestoral_dial.value()))
         self.cholestoral_dial_label.setAlignment(Qt.AlignmentFlag.AlignLeft) 
-         # Update the alignment to AlignLeft
+        
         
         #resting blood pressure
         self.resting_blood_pressure=QSpinBox()
@@ -127,7 +127,16 @@ class Widget(QWidget):
         self.resting_blood_pressure_label = QLabel("Resting Blood Pressure: " + str(self.resting_blood_pressure.value()))
         self.resting_blood_pressure.valueChanged.connect(self.value_changed)
 
-        
+        # select label
+        self.btn_open_dialog = QPushButton('Select File', self)
+        self.btn_open_dialog.setMaximumWidth(90)
+        self.btn_open_dialog.clicked.connect(self.show_file_dialog)
+
+        self.textbox_file_path = QLineEdit(self)
+        self.textbox_file_path.setMaximumWidth(200)
+        self.textbox_file_path.setReadOnly(True)
+        self.textbox_file_path.setText("No file selected")
+
         # Result label
         result_label = QLabel("Result:")
         
@@ -136,7 +145,8 @@ class Widget(QWidget):
         go_button = QPushButton("GO")
         go_button.setMaximumWidth(80)
         go_button.clicked.connect(self.pop_up)
-        grid_layout.addWidget(go_button, 9, 2)
+        
+
 
         grid_layout.addWidget(self.label_gender, 0, 0)
         grid_layout.addLayout(button_layout, 1, 0)  # Add the button layout to the same row
@@ -159,7 +169,11 @@ class Widget(QWidget):
 
         #result label
         grid_layout.addWidget(result_label, 8, 2)
-        grid_layout.addWidget(go_button, 9, 2)
+        #file path
+        grid_layout.addWidget(self.btn_open_dialog, 9, 2)
+        grid_layout.addWidget(self.textbox_file_path, 9, 1)
+        #go label
+        grid_layout.addWidget(go_button, 10, 2)
 
         home_tab_widget.setLayout(grid_layout)
         # Check if a layout already exists for the home tab
@@ -182,8 +196,16 @@ class Widget(QWidget):
         self.cholestoral_dial_label.setText("Cholestoral: " + str(self.cholestoral_dial.value()))
     
     def pop_up(self):
+        self.calculate_heart_attack_risk()
         progress_dialog = ProgressDialog(self)
         progress_dialog.exec()
+    
+    def show_file_dialog(self):
+        file_dialog = QFileDialog(self)
+        # checks if the user selected a file and pastes the path in the textbox
+        """ check if the user selected file is a csv file(unfinished!)"""
+        if file_dialog.exec():
+            self.textbox_file_path.setText(file_dialog.selectedFiles()[0])
         
 
     def update_progress(self, progress_bar, timer):
@@ -194,11 +216,29 @@ class Widget(QWidget):
         if new_value == 0:
             timer.stop()
 
+    ## sk learn code goes here
     def calculate_heart_attack_risk(self):
-        pass
+        #read and analyze the file using panda
+        file=pd.read_csv(self.textbox_file_path.text())
+        file.describe()
+        file.head()
+        file.info()
+        print(f"The number of null values is:{file.isnull().sum()}")
+
+        self.terminal_message=QDialog()
+        self.terminal_message.setWindowTitle("Terminal")
+
+        text_edit=QTextEdit()
+        text_edit.setText("PLEASE READ THE TERMINAL FOR MORE INFORMATION ABOUT THE CALCULATION")
+        text_edit.setReadOnly(True)
+
+        layout=QVBoxLayout()
+        layout.addWidget(text_edit)
+        self.terminal_message.setLayout(layout)
+
+        self.terminal_message.exec()
 
 # MOS E PREK ME DOR IKYT KLASE !!
-
 class ProgressDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
