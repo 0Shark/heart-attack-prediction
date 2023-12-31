@@ -1,6 +1,3 @@
-# dataset: https://www.kaggle.com/datasets/johnsmith88/heart-disease-dataset/
-# https://www.kaggle.com/code/nareshbhat/heart-attack-prediction-using-different-ml-models/notebook
-
 from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QTabWidget, QLabel, QGridLayout, QSlider, QHBoxLayout, QSpinBox, QDial, QProgressBar, QDialog, QFileDialog, QLineEdit, QTextEdit, QCheckBox, QRadioButton, QButtonGroup
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt, QTimer
@@ -8,6 +5,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+from model import Model
 
 class Widget(QWidget):
     def __init__(self):
@@ -18,7 +16,7 @@ class Widget(QWidget):
         self.tabs.setCurrentIndex(0)
         self.setWindowIcon(QIcon("heart.png"))
         self.display_home()
-
+        self.model = False
 
     def tabs_section(self):
         self.tabs = QTabWidget(self)
@@ -151,7 +149,48 @@ class Widget(QWidget):
         self.st_depression_induced_by_exercise_relative_to_rest.setValue(0)
         self.st_depression_induced_by_exercise_relative_to_rest.setSingleStep(1)
         self.st_depression_induced_by_exercise_relative_to_rest.valueChanged.connect(self.value_changed)
-        self.st_depression_induced_by_exercise_relative_to_rest_label = QLabel("ST Depression Induced By Exercise Relative To Rest: " + str(self.st_depression_induced_by_exercise_relative_to_rest.value()))
+        self.st_depression_induced_by_exercise_relative_to_rest_label = QLabel("ST Depression Induced By\n Exercise Relative To Rest: " + str(self.st_depression_induced_by_exercise_relative_to_rest.value()))
+        
+        # slope of the peak exercise ST segment
+        # 0: upsloping
+        # 1: flat
+        # 2: downsloping
+        self.slope_of_the_peak_exercise_ST_segment = QSpinBox()
+        self.slope_of_the_peak_exercise_ST_segment.setMinimumWidth(120)
+        self.slope_of_the_peak_exercise_ST_segment.setMaximumWidth(120)
+        self.slope_of_the_peak_exercise_ST_segment.setMinimum(0)
+        self.slope_of_the_peak_exercise_ST_segment.setMaximum(2)
+        self.slope_of_the_peak_exercise_ST_segment.setValue(0)
+        self.slope_of_the_peak_exercise_ST_segment.setSingleStep(1)
+        self.slope_of_the_peak_exercise_ST_segment.valueChanged.connect(self.value_changed)
+        self.slope_of_the_peak_exercise_ST_segment_label = QLabel("Slope Of The Peak\n Exercise ST Segment: " + str(self.slope_of_the_peak_exercise_ST_segment.value()))
+        
+        # CA 
+        # number of major vessels (0-3) colored by flourosopy
+        # 0: 0
+        # 1: 1
+        # 2: 2
+        # 3: 3
+        self.ca = QSpinBox()
+        self.ca.setMinimumWidth(120)
+        self.ca.setMaximumWidth(120)
+        self.ca.setMinimum(0)
+        self.ca.setMaximum(3)
+        self.ca.setValue(0)
+        self.ca.setSingleStep(1)
+        self.ca.valueChanged.connect(self.value_changed)
+        self.ca_label = QLabel("CA\n(number of major vessels\n (0-3) colored by flourosopy): " + str(self.ca.value()))
+        
+        # Thal 0 = normal; 1 = fixed defect; 2 = reversable defect
+        self.thal = QSpinBox()
+        self.thal.setMinimumWidth(120)
+        self.thal.setMaximumWidth(120)
+        self.thal.setMinimum(0)
+        self.thal.setMaximum(2)
+        self.thal.setValue(0)
+        self.thal.setSingleStep(1)
+        self.thal.valueChanged.connect(self.value_changed)
+        self.thal_label = QLabel("Thal\n0 = normal\n1 = fixed defect\n2 = reversable defect")
         
         # select label
         self.btn_open_dialog = QPushButton('Select File', self)
@@ -164,13 +203,18 @@ class Widget(QWidget):
         self.textbox_file_path.setText("No file selected")
 
         # Result label
-        result_label = QLabel("Result:")
+        self.result_label = QLabel("Result:")
         
 
         # Calculate heart attack risk
         go_button = QPushButton("Train")
         go_button.setMaximumWidth(80)
         go_button.clicked.connect(self.train)
+        
+        # Predict
+        predict_button = QPushButton("Predict")
+        predict_button.setMaximumWidth(80)
+        predict_button.clicked.connect(self.predict)
         
         # Gender
         grid_layout.addWidget(self.gender_label, 0, 0)
@@ -183,16 +227,16 @@ class Widget(QWidget):
         grid_layout.addWidget(self.slider_age, 3, 0, 1, 2)
 
         # Resting blood pressure
-        grid_layout.addWidget(self.resting_blood_pressure_label, 4, 0)
-        grid_layout.addWidget(self.resting_blood_pressure, 5, 0)
+        grid_layout.addWidget(self.resting_blood_pressure_label, 5, 0)
+        grid_layout.addWidget(self.resting_blood_pressure, 6, 0)
         
         # Resting electrocardiographic results
-        grid_layout.addWidget(self.resting_electrocardiographic_results_label, 2, 2)
-        grid_layout.addWidget(self.resting_electrocardiographic_results, 3, 2)
+        grid_layout.addWidget(self.resting_electrocardiographic_results_label, 4, 2)
+        grid_layout.addWidget(self.resting_electrocardiographic_results, 5, 2)
 
         # Chest pain type
-        grid_layout.addWidget(self.chest_pain_type_label, 6, 0)
-        grid_layout.addWidget(self.chest_pain_type, 7, 0)
+        grid_layout.addWidget(self.chest_pain_type_label, 7, 0)
+        grid_layout.addWidget(self.chest_pain_type, 8, 0)
         
         # Fasting blood sugar
         grid_layout.addWidget(self.fasting_blood_sugar, 9, 0)
@@ -201,24 +245,38 @@ class Widget(QWidget):
         grid_layout.addWidget(self.exercise_induced_angina, 10, 0)
         
         # ST depression induced by exercise relative to rest
-        grid_layout.addWidget(self.st_depression_induced_by_exercise_relative_to_rest_label, 4, 2)
-        grid_layout.addWidget(self.st_depression_induced_by_exercise_relative_to_rest, 5, 2)
+        grid_layout.addWidget(self.st_depression_induced_by_exercise_relative_to_rest_label, 6, 2)
+        grid_layout.addWidget(self.st_depression_induced_by_exercise_relative_to_rest, 7, 2)
+
+        # CA number of major vessels (0-3) colored by flourosopy
+        grid_layout.addWidget(self.ca_label, 0, 2)
+        grid_layout.addWidget(self.ca, 1, 2)
 
         # Cholestoral dial
-        grid_layout.addWidget(self.cholestoral_dial_label, 0, 2)
-        grid_layout.addWidget(self.cholestoral_dial, 1, 2)
+        grid_layout.addWidget(self.cholestoral_dial_label, 2, 2)
+        grid_layout.addWidget(self.cholestoral_dial, 3, 2)
         
         # Maximum heart rate achieved
-        grid_layout.addWidget(self.maximum_heart_rate_achieved_label, 6, 2)
-        grid_layout.addWidget(self.maximum_heart_rate_achieved, 7, 2)
-
+        grid_layout.addWidget(self.maximum_heart_rate_achieved_label, 8, 2)
+        grid_layout.addWidget(self.maximum_heart_rate_achieved, 9, 2)
+        
+        # Slope of the peak exercise ST segment
+        grid_layout.addWidget(self.slope_of_the_peak_exercise_ST_segment_label, 11, 0)
+        grid_layout.addWidget(self.slope_of_the_peak_exercise_ST_segment, 12, 0)
+        
+        # Thal 0 = normal; 1 = fixed defect; 2 = reversable defect
+        grid_layout.addWidget(self.thal_label, 13, 0)
+        grid_layout.addWidget(self.thal, 14, 0)
+        
         #result label
-        grid_layout.addWidget(result_label, 8, 2)
+        grid_layout.addWidget(self.result_label, 11, 2)
+        #predict button
+        grid_layout.addWidget(predict_button, 11, 3)
         #file path
-        grid_layout.addWidget(self.btn_open_dialog, 9, 2)
-        grid_layout.addWidget(self.textbox_file_path, 9, 1)
-        #go label
-        grid_layout.addWidget(go_button, 10, 2)
+        grid_layout.addWidget(self.btn_open_dialog, 12, 3)
+        grid_layout.addWidget(self.textbox_file_path, 12, 2)
+        #go button
+        grid_layout.addWidget(go_button, 13, 2)
 
         home_tab_widget.setLayout(grid_layout)
         # Check if a layout already exists for the home tab
@@ -241,8 +299,10 @@ class Widget(QWidget):
         self.cholestoral_dial_label.setText("Cholestoral: " + str(self.cholestoral_dial.value()))
         self.resting_blood_pressure_label.setText("Resting Blood Pressure: " + str(self.resting_blood_pressure.value()))
         self.resting_electrocardiographic_results_label.setText("Resting Electrocardiographic Results: " + str(self.resting_electrocardiographic_results.value()))
-        self.st_depression_induced_by_exercise_relative_to_rest_label.setText("ST Depression Induced By Exercise Relative To Rest: " + str(self.st_depression_induced_by_exercise_relative_to_rest.value()))
+        self.st_depression_induced_by_exercise_relative_to_rest_label.setText("ST Depression Induced\n By Exercise Relative To Rest: " + str(self.st_depression_induced_by_exercise_relative_to_rest.value()))
         self.maximum_heart_rate_achieved_label.setText("Maximum Heart Rate Achieved: " + str(self.maximum_heart_rate_achieved.value()))
+        self.slope_of_the_peak_exercise_ST_segment_label.setText("Slope Of The Peak\n Exercise ST Segment: " + str(self.slope_of_the_peak_exercise_ST_segment.value()))
+        self.ca_label.setText("CA\n(number of major vessels\n (0-3) colored by flourosopy): " + str(self.ca.value()))
         # print changes in the terminal and flush the output
         # Clear the terminal
         print("\033c", end="")
@@ -257,15 +317,58 @@ class Widget(QWidget):
         print(f"Exercise Induced Angina: {self.exercise_induced_angina.isChecked()}")
         print(f"ST Depression Induced By Exercise Relative To Rest: {self.st_depression_induced_by_exercise_relative_to_rest.value()}")
         print(f"Maximum Heart Rate Achieved: {self.maximum_heart_rate_achieved.value()}")
+        print(f"Slope Of The Peak Exercise ST Segment: {self.slope_of_the_peak_exercise_ST_segment.value()}")
+        print(f"CA (number of major vessels (0-3) colored by flourosopy): {self.ca.value()}")
+        print(f"Thal (0 = normal; 1 = fixed defect; 2 = reversable defect): {self.thal.value()}")
         print("-------------------------------------------------")
         
         
-        
-    
     def train(self):
         if self.check_dataset():
             progress_dialog = ProgressDialog(self)
             progress_dialog.exec()
+            self.model = Model(self.textbox_file_path.text())
+            self.model.model_training()
+    
+    
+    def predict(self):
+        if self.model:
+            # Get all input values
+            age = int(self.slider_age.value())
+            gender = self.gender_group.checkedButton().text()
+            if gender == "Male":
+                gender = 1
+            else:
+                gender = 0
+            cp = int(self.chest_pain_type.value())
+            trestbps = int(self.resting_blood_pressure.value())
+            chol = int(self.cholestoral_dial.value())
+            fbs = int(self.fasting_blood_sugar.isChecked())
+            restecg = int(self.resting_electrocardiographic_results.value())
+            exang = int(self.exercise_induced_angina.isChecked())
+            oldpeak = int(self.st_depression_induced_by_exercise_relative_to_rest.value())
+            thalach = int(self.maximum_heart_rate_achieved.value())
+            slope = int(self.slope_of_the_peak_exercise_ST_segment.value())
+            ca = int(self.ca.value())
+            thal = int(self.thal.value())
+            
+            # Predict
+            prediction = self.model.predict([age, gender, cp, trestbps, chol, fbs, restecg, exang, oldpeak, thalach, slope, ca, thal])[0]
+            # Show result
+            self.result_label.setText("Result: " + str(prediction))
+        else:
+            self.terminal_message=QDialog()
+            self.terminal_message.setWindowTitle("Terminal")
+
+            text_edit=QTextEdit()
+            text_edit.setText("Model not trained!")
+            text_edit.setReadOnly(True)
+
+            layout=QVBoxLayout()
+            layout.addWidget(text_edit)
+            self.terminal_message.setLayout(layout)
+
+            self.terminal_message.exec()
     
     def show_file_dialog(self):
         file_dialog = QFileDialog(self)
