@@ -34,7 +34,7 @@ The pie chart shows the most common factors that lead to a heart attack.
 
 # Basic Usage
 
-    python .\main.py
+    python .\gui.py
 
 # Implementation of the Requests
 
