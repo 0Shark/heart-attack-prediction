@@ -4,7 +4,8 @@ from PyQt6.QtCore import Qt, QTimer
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
 from model import Model
 
 class Widget(QWidget):
@@ -291,7 +292,105 @@ class Widget(QWidget):
 
 
     def display_visualization(self):
-        pass
+        try:
+            self.file=pd.read_csv(self.textbox_file_path.text())
+        except:
+            self.terminal_message=QDialog()
+            self.terminal_message.setWindowTitle("Terminal")
+
+            text_edit=QTextEdit()
+            text_edit.setText("File not found or invalid file format!")
+            text_edit.setReadOnly(True)
+
+            layout=QVBoxLayout()
+            layout.addWidget(text_edit)
+            self.terminal_message.setLayout(layout)
+
+            self.terminal_message.exec()
+            return
+        # Create a widget for the visualization tab
+        visualization_tab_widget = QWidget()
+        self.layout = QGridLayout(visualization_tab_widget)
+        self.figure1 = Figure()
+        self.canvas1 = FigureCanvas(self.figure1)
+        self.layout.addWidget(self.canvas1, 0, 0)  # Add canvas1 to the top-left position (0, 0)
+
+        self.figure2 = Figure()
+        self.canvas2 = FigureCanvas(self.figure2)
+        self.layout.addWidget(self.canvas2, 0, 1)  # Add canvas2 to the top-right position (0, 1)
+
+        # Create labels or other widgets below the canvas widgets
+        label1 = QLabel(f"The average age is {self.file['age'].mean():.2f} years old.")
+        self.layout.addWidget(label1, 1, 0, alignment=Qt.AlignmentFlag.AlignHCenter)  # Add label1 below canvas1
+
+        label2 = QLabel(f"The average cholestoral is {self.file['chol'].mean():.2f} mg/dl.")
+        self.layout.addWidget(label2, 1, 1, alignment=Qt.AlignmentFlag.AlignHCenter)  # Add label2 below canvas2
+
+        label3= QLabel(f"The average maximum heart rate achieved is {self.file['thalach'].mean():.2f} bpm.")
+        self.layout.addWidget(label3, 2, 0, alignment=Qt.AlignmentFlag.AlignHCenter)  # Add label3 below canvas1
+        # Set some spacing between widgets
+        self.layout.setSpacing(20)
+
+        self.plot_data1()  # Plot data on canvas1
+        self.plot_data2()  # Plot data on canvas2
+
+        self.tabs.widget(1).setLayout(QVBoxLayout(self.tabs.widget(1)))
+        self.tabs.widget(1).layout().addWidget(visualization_tab_widget)
+
+    def plot_data1(self):
+        
+        ax = self.figure1.add_subplot(111)
+        #get 1 point from the input
+        try:
+            age_point= int(self.slider_age.value())
+            chol_point= int(self.cholestoral_dial.value())
+        except:
+            self.terminal_message=QDialog()
+            self.terminal_message.setWindowTitle("Terminal")
+
+            text_edit=QTextEdit()
+            text_edit.setText("Please Enter Valid Values for Age and Cholestoral!")
+            text_edit.setReadOnly(True)
+
+            layout=QVBoxLayout()
+            layout.addWidget(text_edit)
+            self.terminal_message.setLayout(layout)
+
+            self.terminal_message.exec()
+            return
+
+
+        x = self.file["age"] + age_point
+        y = self.file["chol"] + chol_point
+
+        # Assign colors based on age (just an example, customize based on your needs)
+        colors = np.where(x < 40, 'red', np.where((40 <= x) & (x < 50), 'green', 'blue'))
+        colors[-1]="black"
+        ax.scatter(x, y, c=colors, marker='o')
+        ax.set_title('Cholestoral vs Age')
+        ax.set_xlabel('Age')
+        ax.set_ylabel('Cholestoral')
+
+        # Trigger canvas update
+        self.canvas1.draw()
+
+        self.tabs.widget(1).setLayout(QVBoxLayout(self.tabs.widget(1)))
+        self.tabs.widget(1).layout().addWidget(self.canvas1)
+    
+    def plot_data2(self):
+        ax = self.figure2.add_subplot(111)
+        plt.style.use('_mpl-gallery-nogrid')
+        x= self.file["age"]
+        y= self.file["thalach"]
+        ax.hist2d(x, y, bins=20, cmap='Reds')
+        ax.set_title('Maximum Heart Rate Achieved vs Age')
+        ax.set_xlabel('Age')
+        ax.set_ylabel('Maximum Heart Rate Achieved')
+        self.canvas2.draw()
+        self.tabs.widget(1).setLayout(QVBoxLayout(self.tabs.widget(1)))
+        self.tabs.widget(1).layout().addWidget(self.canvas2)
+
+
 
     def value_changed(self):
         self.label_slider_age.setText("Age: " + str(self.slider_age.value()))

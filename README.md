@@ -53,10 +53,10 @@ for that. [DONE]
 - You may also use other metrics or diagrams to do this. [DONE]
 - Create several input widgets (at least 3, where 2 must be different) that change some feature variables. [DONE]
 - A Scikit training model algorithm (e.g. from Aurélien Géron, Chapter 4) must be applied.
-- Create 1 or 2 output canvas, i.e. for data visualization
-- At least 3 statistical metrics over the input data must be shown
+- Create 1 or 2 output canvas, i.e. for data visualization [DONE]
+- At least 3 statistical metrics over the input data must be shown [DONE]
 - The app must react interactively to the change of input parameter with a new prediction with visual-
-ization.
+ization.[DONE]
 
 # Work done
 
