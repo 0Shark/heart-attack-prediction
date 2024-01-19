@@ -1,44 +1,48 @@
-Elmer Dema (22211551),<br>
+Elmer Dema (22211551)
+
 Juled Zaganjori (22206337)
 
 # Heart Attack Predictor
 
 https://mygit.th-deg.de/ed01551/recomandation-system
 
-# Project Description
+## Project Description
 
 Heart Attack Predictor is a desktop application that predicts the probability of a heart attack based on the given data.
 The data is taken from Kaggle and the model is trained using the data:
-https://www.kaggle.com/datasets/johnsmith88/heart-disease-dataset/
+https://www.kaggle.com/datasets/juledz/heart-attack-prediction/
 
-The model is then used to predict the probability of a heart attack based on the given data.
+The model is then used to predict the probability of a heart attack as a percentage. 
+The prediction is made using a regression model.
 
-The data is then visualised using the matplotlib library.
-The data is visualised using the scatter plot, the bar chart and the pie chart.
-The scatter plot shows the relation between the age and the probability of a heart attack.
-The bar chart shows which factors have the most impact on the probability of a heart attack.
-The pie chart shows the most common factors that lead to a heart attack.
+## Prerequisites
+- Python 3.10.0
 
-# Installation
-## Setup the virtual environment
+## Installation
+### Setup the virtual environment
 
     python -m venv .\venv
 
-## Activate the virtual environment
+### Activate the virtual environment
 
     .\venv\Scripts\activate
 
-## Install the required packages
+### Install the required packages
 
     pip install -r .\requirements.txt
 
-# Basic Usage
+## Basic Usage
 
     python .\gui.py
 
-# Implementation of the Requests
+### Train and test the model
 
-# TODO
+    1) Select the dataset by clicking "Select file" button and choose the dataset file from the dataset folder.
+    2) Click "Train" button to train the model.
+    3) Click "Predict" button to predict the probability of a heart attack based on the chosen input values.
+
+## Implementation of the Requests
+
 - A Desktop App with PyQT6 has to be developed. [DONE]
 - A requirements.txt file must be used to list the used Python modules. [DONE]
 - A README.md file must be created with the structure described in part 01. [DONE]
@@ -58,10 +62,16 @@ for that. [DONE]
 - The app must react interactively to the change of input parameter with a new prediction with visual-
 ization.[DONE]
 
-# Work done
+## Work done
 
 Juled Zaganjori: <br>
-- ...
+- Created the model
+- Added GUI input widgets
+- Implemented interaction between GUI and model
+- Implemented terminal output of the data analysis and prediction
 
 Elmer Dema: <br>
-- ...
+- Created the GUI
+- Added GUI input widgets, output canvas and statistical metrics
+- Implemented visualization of the data
+- Implemented dataset import 

@@ -204,7 +204,7 @@ class Widget(QWidget):
         self.textbox_file_path.setText("No file selected")
 
         # Result label
-        self.result_label = QLabel("Result:")
+        self.result_label = QLabel("Heart attack risk:")
         
 
         # Calculate heart attack risk
@@ -434,11 +434,7 @@ class Widget(QWidget):
         if self.model:
             # Get all input values
             age = int(self.slider_age.value())
-            gender = self.gender_group.checkedButton().text()
-            if gender == "Male":
-                gender = 1
-            else:
-                gender = 0
+            gender = 1 if self.gender_group.checkedButton().text() == "Male" else 0
             cp = int(self.chest_pain_type.value())
             trestbps = int(self.resting_blood_pressure.value())
             chol = int(self.cholestoral_dial.value())
@@ -450,20 +446,23 @@ class Widget(QWidget):
             slope = int(self.slope_of_the_peak_exercise_ST_segment.value())
             ca = int(self.ca.value())
             thal = int(self.thal.value())
-            
+
             # Predict
-            prediction = self.model.predict([age, gender, cp, trestbps, chol, fbs, restecg, exang, oldpeak, thalach, slope, ca, thal])[0]
+            prediction = self.model.predict([[age, gender, cp, trestbps, chol, fbs, restecg, exang, oldpeak, thalach, slope, ca, thal]])
+            # Prediction:  [0.40026679]
+            # Round to 2 decimal places
+            prediction = round(prediction[0], 2)
             # Show result
-            self.result_label.setText("Result: " + str(prediction))
+            self.result_label.setText(f"Heart attack risk: {prediction*100}%")
         else:
-            self.terminal_message=QDialog()
+            self.terminal_message = QDialog()
             self.terminal_message.setWindowTitle("Terminal")
 
-            text_edit=QTextEdit()
+            text_edit = QTextEdit()
             text_edit.setText("Model not trained!")
             text_edit.setReadOnly(True)
 
-            layout=QVBoxLayout()
+            layout = QVBoxLayout()
             layout.addWidget(text_edit)
             self.terminal_message.setLayout(layout)
 
