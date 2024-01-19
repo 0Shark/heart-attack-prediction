@@ -365,7 +365,7 @@ class Widget(QWidget):
 
         # Assign colors based on age (just an example, customize based on your needs)
         colors = np.where(x < 40, 'red', np.where((40 <= x) & (x < 50), 'green', 'blue'))
-        colors[-1]="black"
+        colors[-1]="red"
         ax.scatter(x, y, c=colors, marker='o')
         ax.set_title('Cholestoral vs Age')
         ax.set_xlabel('Age')
